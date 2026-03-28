@@ -1,0 +1,140 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: clients
+    // Document ID: clientId (matches user UID)
+    // Fields:
+    //   - businessName: string (required)
+    //   - websiteUrl: string
+    //   - industry: string
+    //   - businessSize: string
+    //   - yearsInBusiness: number
+    //   - monthlyRevenue: string
+    //   - location: string
+    //   - painPoints: list
+    //   - tools: list
+    //   - budget: number
+    //   - primaryGoal: string
+    //   - target90Day: string
+    //   - vision12Month: string
+    //   - successMetric: string
+    //   - competitors: list
+    //   - packageSelected: string
+    //   - reportGenerated: bool
+    //   - createdAt: timestamp
+    //   - uid: string (required)
+    //
+    // Collection: reports
+    // Document ID: reportId
+    // Fields:
+    //   - clientId: string (required)
+    //   - reportData: map (required)
+    //   - generatedAt: timestamp
+    //   - shareToken: string
+    //
+    // Collection: content
+    // Document ID: contentId
+    // Fields:
+    //   - clientId: string (required)
+    //   - industry: string
+    //   - platforms: list
+    //   - content: string (required)
+    //   - createdAt: timestamp
+    //
+    // Collection: insights
+    // Document ID: insightId
+    // Fields:
+    //   - industry: string (required)
+    //   - insights: list (required)
+    //   - generatedAt: timestamp
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isDocOwner() {
+      return isAuthenticated() && request.auth.uid == resource.data.uid;
+    }
+
+    function isRequestOwner() {
+      return isAuthenticated() && request.auth.uid == request.resource.data.uid;
+    }
+
+    function isValidClient(data) {
+      return data.businessName is string && data.businessName.size() > 0 && data.businessName.size() < 100 &&
+             data.uid is string && data.uid == request.auth.uid;
+    }
+
+    function isValidReport(data) {
+      return data.clientId is string && data.reportData is map;
+    }
+
+    function isValidContent(data) {
+      return data.clientId is string && data.content is string;
+    }
+
+    function isValidInsight(data) {
+      return data.industry is string && data.insights is list;
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /clients/{clientId} {
+      allow read: if isOwner(clientId);
+      allow create: if isOwner(clientId) && isValidClient(request.resource.data);
+      allow update: if isOwner(clientId) && isValidClient(request.resource.data);
+      allow delete: if isOwner(clientId);
+    }
+
+    match /reports/{reportId} {
+      // Allow read if owner OR if it's a public report (has a shareToken)
+      allow read: if (isAuthenticated() && request.auth.uid == resource.data.clientId) || (resource.data.shareToken != null);
+      allow create: if isAuthenticated() && request.auth.uid == request.resource.data.clientId && isValidReport(request.resource.data);
+      allow update: if isAuthenticated() && request.auth.uid == resource.data.clientId && isValidReport(request.resource.data);
+      allow delete: if isAuthenticated() && request.auth.uid == resource.data.clientId;
+    }
+
+    match /content/{contentId} {
+      allow read: if isAuthenticated() && request.auth.uid == resource.data.clientId;
+      allow create: if isAuthenticated() && request.auth.uid == request.resource.data.clientId && isValidContent(request.resource.data);
+      allow update: if isAuthenticated() && request.auth.uid == resource.data.clientId && isValidContent(request.resource.data);
+      allow delete: if isAuthenticated() && request.auth.uid == resource.data.clientId;
+    }
+
+    match /insights_cache/{insightId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated(); // Allow users to cache insights
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    match /tasks/{taskId} {
+      allow read: if isAuthenticated() && request.auth.uid == resource.data.clientId;
+      allow create: if isAuthenticated() && request.auth.uid == request.resource.data.clientId;
+      allow update: if isAuthenticated() && request.auth.uid == resource.data.clientId;
+      allow delete: if isAuthenticated() && request.auth.uid == resource.data.clientId;
+    }
+
+    // Default deny
+    match /{path=**} {
+      allow read, write: if false;
+    }
+  }
+}

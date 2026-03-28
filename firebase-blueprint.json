@@ -1,0 +1,102 @@
+{
+  "entities": {
+    "Client": {
+      "title": "Client",
+      "description": "A client of GeniuzLab",
+      "type": "object",
+      "properties": {
+        "businessName": { "type": "string" },
+        "websiteUrl": { "type": "string" },
+        "industry": { "type": "string" },
+        "businessSize": { "type": "string" },
+        "yearsInBusiness": { "type": "number" },
+        "monthlyRevenue": { "type": "string" },
+        "location": { "type": "string" },
+        "painPoints": { "type": "array", "items": { "type": "object" } },
+        "tools": { "type": "array", "items": { "type": "string" } },
+        "budget": { "type": "number" },
+        "primaryGoal": { "type": "string" },
+        "target90Day": { "type": "string" },
+        "vision12Month": { "type": "string" },
+        "successMetric": { "type": "string" },
+        "competitors": { "type": "array", "items": { "type": "object" } },
+        "packageSelected": { "type": "string" },
+        "reportGenerated": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "uid": { "type": "string" }
+      },
+      "required": ["businessName", "uid"]
+    },
+    "Report": {
+      "title": "Report",
+      "description": "An AI-generated intelligence report",
+      "type": "object",
+      "properties": {
+        "clientId": { "type": "string" },
+        "reportData": { "type": "object" },
+        "generatedAt": { "type": "string", "format": "date-time" },
+        "shareToken": { "type": "string" }
+      },
+      "required": ["clientId", "reportData"]
+    },
+    "Content": {
+      "title": "Content",
+      "description": "AI-generated content",
+      "type": "object",
+      "properties": {
+        "clientId": { "type": "string" },
+        "industry": { "type": "string" },
+        "platforms": { "type": "array", "items": { "type": "string" } },
+        "content": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["clientId", "content"]
+    },
+    "InsightsCache": {
+      "title": "InsightsCache",
+      "description": "Daily AI-generated insights cache",
+      "type": "object",
+      "properties": {
+        "industry": { "type": "string" },
+        "insights": { "type": "array", "items": { "type": "string" } },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["industry", "insights"]
+    },
+    "Task": {
+      "title": "Task",
+      "description": "A task in the 90-day roadmap",
+      "type": "object",
+      "properties": {
+        "clientId": { "type": "string" },
+        "title": { "type": "string" },
+        "completed": { "type": "boolean" },
+        "phase": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["clientId", "title", "completed"]
+    }
+  },
+  "firestore": {
+    "/clients/{clientId}": {
+      "schema": "Client",
+      "description": "Client data"
+    },
+    "/reports/{reportId}": {
+      "schema": "Report",
+      "description": "AI-generated reports"
+    },
+    "/content/{contentId}": {
+      "schema": "Content",
+      "description": "Generated content"
+    },
+    "/insights_cache/{insightId}": {
+      "schema": "InsightsCache",
+      "description": "Daily insights cache"
+    },
+    "/tasks/{taskId}": {
+      "schema": "Task",
+      "description": "Roadmap tasks"
+    }
+  }
+}
