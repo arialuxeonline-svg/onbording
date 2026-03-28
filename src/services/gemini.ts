@@ -1,9 +1,16 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { ClientData, ReportData } from "../types";
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
+const getAI = () => {
+  const apiKey = localStorage.getItem('gemini_api_key_override') || process.env.GEMINI_API_KEY || "";
+  if (!apiKey) {
+    throw new Error('No Gemini API Key found. Please add one in Settings.');
+  }
+  return new GoogleGenAI({ apiKey });
+};
 
 export const generateReport = async (clientData: ClientData): Promise<ReportData> => {
+  const ai = getAI();
   const prompt = `You are a world-class AI Automation Strategist at GeniuzLab. 
   Generate a high-level, premium Client Intelligence Report for ${clientData.businessName} in the ${clientData.industry} industry.
   Business Context: Size: ${clientData.businessSize}, Revenue: ${clientData.monthlyRevenue}, Goal: ${clientData.primaryGoal}.
@@ -70,6 +77,7 @@ export const generateReport = async (clientData: ClientData): Promise<ReportData
 };
 
 export const generateContent = async (industry: string, businessName: string, topic: string, platforms: string[]): Promise<string> => {
+  const ai = getAI();
   const prompt = `You are a high-end AI Content Strategist for ${businessName} in the ${industry} industry.
   Generate premium, high-converting content for the following platforms: ${platforms.join(", ")}.
   Topic/Campaign: ${topic}.
@@ -79,8 +87,9 @@ export const generateContent = async (industry: string, businessName: string, to
   - Optimized for each platform's unique audience
   - Highly engaging and authoritative
   - Include relevant hashtags and CTAs
+  - Use psychological triggers (scarcity, authority, social proof) where appropriate
   
-  Format the output in clear Markdown with headers for each platform.`;
+  Format the output in clear Markdown with headers for each platform. If multiple platforms are selected, ensure each has a distinct section.`;
 
   const response = await ai.models.generateContent({
     model: "gemini-3-flash-preview",
@@ -91,6 +100,7 @@ export const generateContent = async (industry: string, businessName: string, to
 };
 
 export const generateInsights = async (industry: string): Promise<string[]> => {
+  const ai = getAI();
   const prompt = `Generate 3-5 high-impact, data-driven AI automation insights and trends specifically for the ${industry} industry. 
   Focus on how AI is disrupting this sector and what businesses should do to stay ahead.
   Return as a JSON array of strings.`;
@@ -111,6 +121,7 @@ export const generateInsights = async (industry: string): Promise<string[]> => {
 };
 
 export const chatWithAI = async (systemPrompt: string, message: string, history: { role: 'user' | 'bot', text: string }[]): Promise<string> => {
+  const ai = getAI();
   const chat = ai.chats.create({
     model: "gemini-3-flash-preview",
     config: {
@@ -127,6 +138,7 @@ export const chatWithAI = async (systemPrompt: string, message: string, history:
 };
 
 export const analyzeCompetitor = async (url: string, industry: string): Promise<any> => {
+  const ai = getAI();
   const prompt = `Analyze the website ${url} in the context of the ${industry} industry.
   Identify their digital presence, content strategy, and potential weaknesses that an AI automation agency could exploit.
   

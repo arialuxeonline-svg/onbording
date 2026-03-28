@@ -1,12 +1,15 @@
 import React from 'react';
 import { motion } from 'motion/react';
+import { LogOut, Settings } from 'lucide-react';
 
 interface LayoutProps {
   children: React.ReactNode;
   user?: any;
+  onSignOut?: () => void;
+  onOpenSettings?: () => void;
 }
 
-export const Layout: React.FC<LayoutProps> = ({ children, user }) => {
+export const Layout: React.FC<LayoutProps> = ({ children, user, onSignOut, onOpenSettings }) => {
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white font-sans selection:bg-purple-500/30">
       {/* Background Glows */}
@@ -34,12 +37,36 @@ export const Layout: React.FC<LayoutProps> = ({ children, user }) => {
               <a href="#" className="hover:text-white transition-colors">Pricing</a>
             </div>
             {user ? (
-              <div className="flex items-center gap-2 md:gap-3 pl-4 md:pl-8 border-l border-[#2a2a2a]">
+              <div className="flex items-center gap-3 md:gap-4 pl-4 md:pl-8 border-l border-[#2a2a2a]">
+                <button 
+                  onClick={onOpenSettings}
+                  className="p-2 text-gray-400 hover:text-white hover:bg-[#1a1a1a] rounded-lg transition-all"
+                  title="Settings"
+                >
+                  <Settings size={20} />
+                </button>
+                
                 <div className="hidden sm:block text-right">
-                  <p className="text-xs font-bold text-white truncate max-w-[120px]">{user.displayName}</p>
+                  <p className="text-xs font-bold text-white truncate max-w-[120px]">
+                    {user.displayName?.length > 20 ? user.displayName.substring(0, 20) + '...' : user.displayName}
+                  </p>
                   <p className="text-[10px] text-gray-500 truncate max-w-[120px]">{user.email}</p>
                 </div>
-                <img src={user.photoURL} alt={user.displayName} className="w-8 h-8 md:w-10 md:h-10 rounded-full border border-purple-500/50" referrerPolicy="no-referrer" />
+                
+                <img 
+                  src={user.photoURL || `https://ui-avatars.com/api/?name=${user.displayName}&background=7c3aed&color=fff`} 
+                  alt={user.displayName} 
+                  className="w-8 h-8 md:w-10 md:h-10 rounded-full border border-purple-500/50" 
+                  referrerPolicy="no-referrer" 
+                />
+
+                <button 
+                  onClick={onSignOut}
+                  className="flex items-center gap-2 px-3 py-1.5 bg-red-500/10 text-red-500 border border-red-500/20 rounded-lg hover:bg-red-500 hover:text-white transition-all text-xs font-bold"
+                >
+                  <LogOut size={14} />
+                  <span className="hidden md:inline">Sign Out</span>
+                </button>
               </div>
             ) : (
               <button className="px-4 py-2 md:px-5 md:py-2.5 bg-white text-black rounded-lg hover:bg-gray-200 transition-all font-semibold text-xs md:text-sm">

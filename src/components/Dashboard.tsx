@@ -166,6 +166,7 @@ const ContentGenerator: React.FC<{ clientData: ClientData }> = ({ clientData }) 
   const [loading, setLoading] = useState(false);
   const [history, setHistory] = useState<any[]>([]);
   const [currentContent, setCurrentContent] = useState<string | null>(null);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   useEffect(() => {
     const q = query(collection(db, 'content'), where('clientId', '==', clientData.uid));
@@ -174,6 +175,29 @@ const ContentGenerator: React.FC<{ clientData: ClientData }> = ({ clientData }) 
     });
     return () => unsubscribe();
   }, [clientData.uid]);
+
+  const copyToClipboard = async (text: string, id: string) => {
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(text);
+      } else {
+        const textArea = document.createElement("textarea");
+        textArea.value = text;
+        textArea.style.position = "fixed";
+        textArea.style.left = "-999999px";
+        textArea.style.top = "-999999px";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        document.execCommand('copy');
+        textArea.remove();
+      }
+      setCopiedId(id);
+      setTimeout(() => setCopiedId(null), 2000);
+    } catch (err) {
+      console.error('Failed to copy: ', err);
+    }
+  };
 
   const generate = async () => {
     if (!topic) return;
@@ -197,6 +221,7 @@ const ContentGenerator: React.FC<{ clientData: ClientData }> = ({ clientData }) 
       });
     } catch (error) {
       console.error("Content generation failed:", error);
+      alert("Content generation failed. Please check your API key in settings.");
     } finally {
       setLoading(false);
     }
@@ -243,7 +268,7 @@ const ContentGenerator: React.FC<{ clientData: ClientData }> = ({ clientData }) 
               className="w-full py-4 bg-purple-600 text-white rounded-xl font-bold hover:bg-purple-700 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
             >
               {loading ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Sparkles size={20} />}
-              <span>Generate Content</span>
+              <span>{loading ? 'Generating...' : 'Generate Content'}</span>
             </button>
           </div>
         </div>
@@ -269,9 +294,19 @@ const ContentGenerator: React.FC<{ clientData: ClientData }> = ({ clientData }) 
       </div>
 
       <div className="lg:col-span-2">
-        <div className="p-8 bg-[#111111] border border-[#2a2a2a] rounded-3xl shadow-xl min-h-[600px] flex flex-col">
+        <div className="p-8 bg-[#111111] border border-[#2a2a2a] rounded-3xl shadow-xl min-h-[600px] flex flex-col relative">
+          {currentContent && (
+            <button 
+              onClick={() => copyToClipboard(currentContent, 'main')}
+              className="absolute top-6 right-6 p-2 bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg hover:border-purple-500/50 transition-all text-gray-400 hover:text-white flex items-center gap-2 text-xs font-bold"
+            >
+              {copiedId === 'main' ? <CheckCircle2 size={16} className="text-green-500" /> : <ClipboardList size={16} />}
+              <span>{copiedId === 'main' ? 'Copied!' : 'Copy All'}</span>
+            </button>
+          )}
+          
           {currentContent ? (
-            <div className="prose prose-invert max-w-none flex-1">
+            <div className="prose prose-invert max-w-none flex-1 mt-8">
               <ReactMarkdown>{currentContent}</ReactMarkdown>
             </div>
           ) : (
